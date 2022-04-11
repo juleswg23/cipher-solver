@@ -1,6 +1,16 @@
 import structure5.*;
 import java.util.Scanner;
 
+/*
+ * This program is dependent on structure5, a library written to
+ * make data structures more accessible.
+ * 
+ * It can be accessed at
+ * http://www.cs.williams.edu/~bailey/JavaStructures/doc/structure5/structure5/package-summary.html
+ * 
+ */   
+
+
 public class Solver
 {   
     LexiconTrie lex;
@@ -12,6 +22,7 @@ public class Solver
         lex.addWordsFromFile("nytWords.txt");
         lex.addWordsFromFile("nytProperNouns.txt");
 
+        // make an empty array of possible solution ciphers
         soln = new char[26];
         for (int i = 0; i < 26; i++) {
             soln[i] = '?';
@@ -19,11 +30,13 @@ public class Solver
 
         puzzleWords = setup(words);
 
+        // record all the letters that haven't been used in the cipher
         Vector<Character> unused = new Vector<>();
         for (int i = 0; i < 26; i++){
             unused.add(toLower(i));
         }
         
+        // create a vector of possible solutions, and run program by calling the solve method
         Vector<char[]> solns = solve(soln, puzzleWords, unused, new Vector<char[]>());
         if (solns.size() == 0) {
             System.out.println("\nThere were no solutions found.");
@@ -37,8 +50,14 @@ public class Solver
             System.out.println(solveWith(soln, words));
     }
 
+    /*
+     * The main method in this program, takes as input a current cipher solution,
+     * the original string, a vector of unused characters in the cipher, and
+     * a vector of the solutions found so far
+    */
+    
     public Vector<char[]> solve(char[] curSoln, String original, Vector<Character> unused, Vector<char[]> solns) {
-        //build soFar
+        //build soFar, which is the decoded message, to test if we've found words
         String soFar = "";
         int charInt;
         for (int i = 0; i < original.length(); i++) {
@@ -64,7 +83,6 @@ public class Solver
             return solns;
         }
 
-        //CHANGED
         // there are still uppercase letters
         // find index of first uppercase
         int finger = 0;
@@ -78,25 +96,28 @@ public class Solver
         System.out.println(soFar);
         Vector<char[]> newSolns;
 
-        // recursion
+        // recursive step, call solve for a letter at each position in the cipher
         for (int i = 0; i < unused.size(); i++) {
+            // duplicate the current solution so we don't edit this memory in the
+            // recursive call
             char[] newSoln = new char[curSoln.length];
             System.arraycopy(curSoln, 0, newSoln, 0, 26); 
            
+            // put the new letter in the cipher solutions, and remove it from unused
             newSoln[toInt(toReplace)] = unused.get(i);
             char replacing = unused.remove(i);
 
+            // make recursive call
             solns = solve(newSoln, original, unused, solns);
-            // newSolns = solve(newSoln, original, unused, solns);
-            // if (!newSolns.equals(solns)) {
-            //     solns = newSolns;
-            // }
+
+            // if recursive call fails, add the letter back to the unused array
             unused.add(i, replacing);
         }
 
         return solns;
     }
 
+    // check if all the words in a text are valid words
     public boolean areWords(String text) {
         text = text.trim() + " ";
         while (text.contains(" ")) {
@@ -108,6 +129,7 @@ public class Solver
         return true;
     }
 
+    // check is a text can be matched to words, given the proper cipher
     public boolean matchPhrase(String text) {
         text = text.trim() + " ";
         while (text.contains(" ")) {
@@ -123,6 +145,7 @@ public class Solver
         return true;
     }
 
+    // sort words by shortest length for efficiency later on
     public static String setup(String sentence) {
         sentence = sentence.toUpperCase();
         //String setup = "";
@@ -140,6 +163,7 @@ public class Solver
         return String.join(" ", words);
     }
 
+    // decrypt a string with the cipher
     public static String solveWith(char[] soln, String encrypted) {
         String str = "";
         for (int i = 0; i < encrypted.length(); i++) {
@@ -152,6 +176,7 @@ public class Solver
         return str;
     }
 
+    // check that there are still question marks in a word
     public static boolean countqs(String word) {
         int counter = 1;
         for (int i = 0; i < word.length(); i++) {
@@ -161,6 +186,7 @@ public class Solver
         return (word.length() + 1) / counter > 1;
     }
 
+    // convert a word to regex for the lexicon
     public static String makeRegex(String word) {
         String str = "";
         int i = 0;
